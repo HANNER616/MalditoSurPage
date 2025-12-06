@@ -1,4 +1,15 @@
-import { kv } from '@vercel/kv';
+// Support both Vercel KV and Edge Config
+import { get } from '@vercel/edge-config';
+
+// Determine storage type based on available environment variables
+function getStorageType() {
+  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+    return 'kv';
+  } else if (process.env.EDGE_CONFIG) {
+    return 'edge-config';
+  }
+  return 'edge-config'; // Default to edge-config
+}
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -12,11 +23,25 @@ export default async function handler(req, res) {
   }
 
   const SCHEDULE_KEY = 'band_schedule_data';
+  const storageType = getStorageType();
 
   try {
     if (req.method === 'GET') {
-      // Get schedule data
-      const data = await kv.get(SCHEDULE_KEY);
+      let data = null;
+
+      if (storageType === 'kv') {
+        // Use KV storage
+        const { kv } = await import('@vercel/kv');
+        data = await kv.get(SCHEDULE_KEY);
+      } else {
+        // Use Edge Config
+        try {
+          data = await get(SCHEDULE_KEY);
+        } catch (e) {
+          // Edge Config might not have the key yet
+          data = null;
+        }
+      }
       
       if (data) {
         return res.status(200).json(data);
@@ -39,10 +64,69 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data format' });
       }
 
-      // Save to KV store
-      await kv.set(SCHEDULE_KEY, scheduleData);
-      
-      return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+      if (storageType === 'kv') {
+        // Save to KV store
+        const { kv } = await import('@vercel/kv');
+        await kv.set(SCHEDULE_KEY, scheduleData);
+        return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+      } else {
+        // Use Edge Config
+        // Extract Edge Config ID from connection string
+        // EDGE_CONFIG format: https://edge-config.vercel.com/ecfg_xxx?token=xxx
+        let edgeConfigId = process.env.EDGE_CONFIG_ID;
+        
+        if (!edgeConfigId && process.env.EDGE_CONFIG) {
+          // Extract ID from URL: https://edge-config.vercel.com/ecfg_xxx?token=xxx
+          const match = process.env.EDGE_CONFIG.match(/ecfg_[a-zA-Z0-9_-]+/);
+          if (match) {
+            edgeConfigId = match[0];
+          }
+        }
+        
+        const vercelApiToken = process.env.VERCEL_API_TOKEN;
+
+        if (!edgeConfigId) {
+          return res.status(500).json({ 
+            error: 'Could not extract Edge Config ID from EDGE_CONFIG. Please set EDGE_CONFIG_ID environment variable with your Edge Config ID (e.g., ecfg_xxx).' 
+          });
+        }
+
+        if (!vercelApiToken) {
+          return res.status(500).json({ 
+            error: 'Edge Config writes require VERCEL_API_TOKEN. Please create a Vercel API token at vercel.com/account/tokens and add it as VERCEL_API_TOKEN environment variable.' 
+          });
+        }
+
+        const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${vercelApiToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                operation: 'upsert',
+                key: SCHEDULE_KEY,
+                value: scheduleData,
+              },
+            ],
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.status === 'ok') {
+          return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+        } else {
+          throw new Error(result.error || 'Failed to update Edge Config');
+        }
+      }
     } else {
       return res.status(405).json({ error: 'Method not allowed' });
     }

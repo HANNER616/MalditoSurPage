@@ -8,7 +8,8 @@
     "build": "echo 'No build step required'"
   },
   "dependencies": {
-    "@vercel/kv": "^1.0.1"
+    "@vercel/kv": "^1.0.1",
+    "@vercel/edge-config": "^1.0.1"
   },
   "engines": {
     "node": ">=18.x"

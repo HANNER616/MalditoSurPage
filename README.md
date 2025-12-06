@@ -19,11 +19,32 @@ A web application for managing and displaying band schedules with a public view 
 
 ### Step 1: Set up Vercel KV
 
-1. Go to your Vercel dashboard
-2. Navigate to your project settings
-3. Go to the "Storage" tab
-4. Click "Create Database" and select "KV" (Redis)
-5. Note down the connection details (you'll need the `KV_REST_API_URL`, `KV_REST_API_TOKEN`, etc.)
+**Option A: Through Vercel Dashboard (Recommended)**
+
+1. Go to [vercel.com](https://vercel.com) and log in
+2. Click on your **project** (or create a new one if you haven't deployed yet)
+3. In the project dashboard, look for one of these tabs:
+   - **"Storage"** tab (if visible in the top navigation)
+   - **"Integrations"** tab → Search for "KV" or "Redis"
+   - **"Settings"** → **"Storage"** section
+4. Click **"Create Database"** or **"Add Integration"**
+5. Select **"KV"** (Key-Value store / Redis)
+6. Follow the prompts to create the KV database
+7. After creation, you'll see the connection details:
+   - `KV_REST_API_URL`
+   - `KV_REST_API_TOKEN`
+   - Copy these values
+
+**Option B: Through Vercel CLI**
+
+If you can't find it in the dashboard, you can also create it via CLI:
+```bash
+vercel kv create
+```
+
+**Note**: If you still can't find the Storage/Integrations option, you may need to:
+- Make sure you're on a paid plan (KV requires a paid Vercel plan)
+- Or use the alternative solution below (file-based storage)
 
 ### Step 2: Configure Environment Variables
 
