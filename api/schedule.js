@@ -1,15 +1,5 @@
 // Support both Vercel KV and Edge Config
-import { get } from '@vercel/edge-config';
-
-// Determine storage type based on available environment variables
-function getStorageType() {
-  if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-    return 'kv';
-  } else if (process.env.EDGE_CONFIG) {
-    return 'edge-config';
-  }
-  return 'edge-config'; // Default to edge-config
-}
+// Dynamic imports to prevent 404 errors if packages aren't available
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -23,6 +13,17 @@ export default async function handler(req, res) {
   }
 
   const SCHEDULE_KEY = 'band_schedule_data';
+
+  // Determine storage type based on available environment variables
+  function getStorageType() {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      return 'kv';
+    } else if (process.env.EDGE_CONFIG) {
+      return 'edge-config';
+    }
+    return 'edge-config'; // Default to edge-config
+  }
+
   const storageType = getStorageType();
 
   try {
@@ -31,14 +32,21 @@ export default async function handler(req, res) {
 
       if (storageType === 'kv') {
         // Use KV storage
-        const { kv } = await import('@vercel/kv');
-        data = await kv.get(SCHEDULE_KEY);
+        try {
+          const { kv } = await import('@vercel/kv');
+          data = await kv.get(SCHEDULE_KEY);
+        } catch (e) {
+          console.error('KV read error:', e.message);
+          data = null;
+        }
       } else {
         // Use Edge Config
         try {
+          const { get } = await import('@vercel/edge-config');
           data = await get(SCHEDULE_KEY);
         } catch (e) {
-          // Edge Config might not have the key yet
+          // Edge Config might not have the key yet or not configured
+          console.log('Edge Config read error:', e.message);
           data = null;
         }
       }
@@ -66,9 +74,14 @@ export default async function handler(req, res) {
 
       if (storageType === 'kv') {
         // Save to KV store
-        const { kv } = await import('@vercel/kv');
-        await kv.set(SCHEDULE_KEY, scheduleData);
-        return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+        try {
+          const { kv } = await import('@vercel/kv');
+          await kv.set(SCHEDULE_KEY, scheduleData);
+          return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+        } catch (e) {
+          console.error('KV write error:', e.message);
+          return res.status(500).json({ error: 'Failed to save to KV', details: e.message });
+        }
       } else {
         // Use Edge Config
         // Extract Edge Config ID from connection string
@@ -97,34 +110,39 @@ export default async function handler(req, res) {
           });
         }
 
-        const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${vercelApiToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            items: [
-              {
-                operation: 'upsert',
-                key: SCHEDULE_KEY,
-                value: scheduleData,
-              },
-            ],
-          }),
-        });
+        try {
+          const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${vercelApiToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              items: [
+                {
+                  operation: 'upsert',
+                  key: SCHEDULE_KEY,
+                  value: scheduleData,
+                },
+              ],
+            }),
+          });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
-        }
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
+          }
 
-        const result = await response.json();
-        
-        if (result.status === 'ok') {
-          return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
-        } else {
-          throw new Error(result.error || 'Failed to update Edge Config');
+          const result = await response.json();
+          
+          if (result.status === 'ok') {
+            return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
+          } else {
+            throw new Error(result.error || 'Failed to update Edge Config');
+          }
+        } catch (e) {
+          console.error('Edge Config write error:', e.message);
+          return res.status(500).json({ error: 'Failed to save to Edge Config', details: e.message });
         }
       }
     } else {
@@ -135,4 +153,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 }
-
