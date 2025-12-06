@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Band Schedule</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('image.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(8px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(22, 33, 62, 0.7) 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Login Section */
+        .login-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .login-section.hidden {
+            display: none;
+        }
+
+        .login-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        .form-group input {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+        }
+
+        .btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 158, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Editor Panel */
+        .editor-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: none;
+            animation: slideDown 0.4s ease;
+        }
+
+        .editor-panel.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .editor-panel h2 {
+            margin-bottom: 25px;
+            color: #4a9eff;
+            font-size: 1.8rem;
+        }
+
+        .editor-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .editor-controls input {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .editor-controls input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+        }
+
+        .bands-editor {
+            margin-bottom: 30px;
+        }
+
+        .bands-editor h3 {
+            margin-bottom: 15px;
+            color: #4a9eff;
+        }
+
+        .band-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .band-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .band-number {
+            font-weight: bold;
+            color: #4a9eff;
+            min-width: 30px;
+        }
+
+        .band-item input {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .band-item input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .drag-handle {
+            cursor: move;
+            color: #888;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        .drag-handle:hover {
+            color: #4a9eff;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .editor-actions .btn {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Public Schedule */
+        .schedule-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .schedule-section h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #4a9eff;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(74, 158, 255, 0.3);
+        }
+
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .schedule-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #4a9eff;
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.5s ease;
+            animation-fill-mode: both;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .schedule-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .schedule-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .band-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .band-number-large {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a9eff;
+            min-width: 40px;
+        }
+
+        .band-name-large {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .time-range {
+            font-size: 1.1rem;
+            color: #b0b0b0;
+            padding: 8px 15px;
+            background: rgba(74, 158, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+        }
+
+        .time-breakdown {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 8px;
+            padding-left: 55px;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            color: #ff6b6b;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .schedule-section {
+                padding: 20px;
+            }
+
+            .schedule-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .schedule-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .band-info {
+                width: 100%;
+            }
+
+            .time-range {
+                width: 100%;
+                text-align: center;
+            }
+
+            .editor-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-actions {
+                flex-direction: column;
+            }
+
+            .editor-actions .btn {
+                width: 100%;
+            }
+
+            .login-form {
+                flex-direction: column;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            .login-section,
+            .editor-panel {
+                display: none !important;
+            }
+
+            .schedule-section {
+                background: white;
+                box-shadow: none;
+                border: none;
+            }
+
+            .schedule-item {
+                background: #f5f5f5;
+                border-left: 4px solid #000;
+                page-break-inside: avoid;
+            }
+
+            .band-number-large,
+            .band-name-large {
+                color: #000;
+            }
+
+            .time-range {
+                background: #e0e0e0;
+                color: #000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Section -->
+        <div class="login-section" id="loginSection">
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div class="error-message" id="loginError"></div>
+        </div>
+
+        <!-- Editor Panel -->
+        <div class="editor-panel" id="editorPanel">
+            <h2>Schedule Editor</h2>
+            
+            <div class="editor-controls">
+                <div class="form-group">
+                    <label for="startTime">Start Time (HH:MM)</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="setupMinutes">Setup Duration (minutes)</label>
+                    <input type="number" id="setupMinutes" min="0" value="15" required>
+                </div>
+                <div class="form-group">
+                    <label for="showMinutes">Show Duration (minutes)</label>
+                    <input type="number" id="showMinutes" min="0" value="30" required>
+                </div>
+            </div>
+
+            <div class="bands-editor">
+                <h3>Bands</h3>
+                <div id="bandsList"></div>
+                <button type="button" class="btn btn-secondary" id="addBandBtn" style="margin-top: 15px;">Add Band</button>
+            </div>
+
+            <div class="editor-actions">
+                <button type="button" class="btn" id="generateScheduleBtn">Generate Schedule</button>
+                <button type="button" class="btn btn-secondary" id="openPublicViewBtn">Open Public View</button>
+                <button type="button" class="btn btn-secondary" id="printScheduleBtn">Print Schedule</button>
+                <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+
+        <!-- Public Schedule -->
+        <div class="schedule-section" id="scheduleSection">
+            <h1>Band Schedule</h1>
+            <div class="schedule-list" id="scheduleList">
+                <!-- Schedule items will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let scheduleData = {
+            startTime: '18:00',
+            setupMinutes: 15,
+            showMinutes: 30,
+            bands: ['Band 1', 'Band 2', 'Band 3']
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadFromAPI();
+            renderSchedule();
+            setupEventListeners();
+            checkLoginStatus();
+        });
+
+        // Check if user is logged in
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            if (isLoggedIn) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('editorPanel').classList.add('visible');
+                renderEditor();
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Editor controls
+            document.getElementById('startTime').addEventListener('change', updateSchedule);
+            document.getElementById('setupMinutes').addEventListener('input', updateSchedule);
+            document.getElementById('showMinutes').addEventListener('input', updateSchedule);
+            
+            // Editor actions
+            document.getElementById('generateScheduleBtn').addEventListener('click', updateSchedule);
+            document.getElementById('addBandBtn').addEventListener('click', addBand);
+            document.getElementById('openPublicViewBtn').addEventListener('click', openPublicView);
+            document.getElementById('printScheduleBtn').addEventListener('click', printSchedule);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Login handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (username === 'admin' && password === 'admin') {
+                errorDiv.classList.remove('visible');
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('editorPanel').classList.add('visible');
+                localStorage.setItem('isLoggedIn', 'true');
+                renderEditor();
+            } else {
+                errorDiv.textContent = 'Invalid credentials. Username: admin, Password: admin';
+                errorDiv.classList.add('visible');
+            }
+        }
+
+        // Logout handler
+        function logout() {
+            localStorage.setItem('isLoggedIn', 'false');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('editorPanel').classList.remove('visible');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Render editor
+        function renderEditor() {
+            document.getElementById('startTime').value = scheduleData.startTime;
+            document.getElementById('setupMinutes').value = scheduleData.setupMinutes;
+            document.getElementById('showMinutes').value = scheduleData.showMinutes;
+            
+            const bandsList = document.getElementById('bandsList');
+            bandsList.innerHTML = '';
+            
+            scheduleData.bands.forEach((band, index) => {
+                const bandItem = createBandEditorItem(band, index);
+                bandsList.appendChild(bandItem);
+            });
+        }
+
+        // Create band editor item
+        function createBandEditorItem(bandName, index) {
+            const div = document.createElement('div');
+            div.className = 'band-item';
+            div.draggable = true;
+            div.dataset.index = index;
+            
+            div.innerHTML = `
+                <span class="band-number">${index + 1}</span>
+                <span class="drag-handle">☰</span>
+                <input type="text" value="${bandName}" class="band-name-input" data-index="${index}">
+                <button type="button" class="btn btn-danger" style="padding: 5px 15px; font-size: 0.9rem;" onclick="removeBand(${index})">Remove</button>
+            `;
+            
+            const input = div.querySelector('.band-name-input');
+            input.addEventListener('input', function() {
+                scheduleData.bands[index] = this.value;
+                saveToAPI();
+                updateSchedule();
+            });
+            
+            // Drag and drop
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragover', handleDragOver);
+            div.addEventListener('drop', handleDrop);
+            div.addEventListener('dragend', handleDragEnd);
+            
+            return div;
+        }
+
+        // Drag and drop handlers
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const fromIndex = parseInt(draggedElement.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+                
+                // Reorder bands array
+                const [movedBand] = scheduleData.bands.splice(fromIndex, 1);
+                scheduleData.bands.splice(toIndex, 0, movedBand);
+                
+                saveToAPI();
+                renderEditor();
+                updateSchedule();
+            }
+            
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+        }
+
+        // Add band
+        async function addBand() {
+            scheduleData.bands.push(`Band ${scheduleData.bands.length + 1}`);
+            await saveToAPI();
+            renderEditor();
+            updateSchedule();
+        }
+
+        // Remove band
+        async function removeBand(index) {
+            if (scheduleData.bands.length > 1) {
+                scheduleData.bands.splice(index, 1);
+                await saveToAPI();
+                renderEditor();
+                updateSchedule();
+            }
+        }
+
+        // Update schedule
+        async function updateSchedule() {
+            scheduleData.startTime = document.getElementById('startTime').value || scheduleData.startTime;
+            scheduleData.setupMinutes = parseInt(document.getElementById('setupMinutes').value) || scheduleData.setupMinutes;
+            scheduleData.showMinutes = parseInt(document.getElementById('showMinutes').value) || scheduleData.showMinutes;
+            
+            await saveToAPI();
+            renderSchedule();
+        }
+
+        // Calculate time ranges
+        function calculateTimeRanges() {
+            const [startHour, startMinute] = scheduleData.startTime.split(':').map(Number);
+            let currentTime = new Date();
+            currentTime.setHours(startHour, startMinute, 0, 0);
+            
+            const ranges = [];
+            
+            scheduleData.bands.forEach((band, index) => {
+                const setupStart = new Date(currentTime);
+                const setupEnd = new Date(currentTime.getTime() + scheduleData.setupMinutes * 60000);
+                const showStart = new Date(setupEnd);
+                const showEnd = new Date(showStart.getTime() + scheduleData.showMinutes * 60000);
+                
+                ranges.push({
+                    bandNumber: index + 1,
+                    bandName: band,
+                    setupStart: formatTime(setupStart),
+                    setupEnd: formatTime(setupEnd),
+                    showStart: formatTime(showStart),
+                    showEnd: formatTime(showEnd),
+                    fullRange: `${formatTime(setupStart)} - ${formatTime(showEnd)}`
+                });
+                
+                currentTime = showEnd;
+            });
+            
+            return ranges;
+        }
+
+        // Format time
+        function formatTime(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // Render schedule
+        function renderSchedule() {
+            const scheduleList = document.getElementById('scheduleList');
+            const ranges = calculateTimeRanges();
+            
+            scheduleList.innerHTML = '';
+            
+            ranges.forEach((range, index) => {
+                const item = document.createElement('div');
+                item.className = 'schedule-item';
+                item.style.animationDelay = `${index * 0.1}s`;
+                
+                item.innerHTML = `
+                    <div class="schedule-item-header">
+                        <div class="band-info">
+                            <span class="band-number-large">${range.bandNumber}</span>
+                            <span class="band-name-large">${range.bandName}</span>
+                        </div>
+                        <div class="time-range">${range.fullRange}</div>
+                    </div>
+                    <div class="time-breakdown">
+                        Setup: ${range.setupStart} - ${range.setupEnd} | Show: ${range.showStart} - ${range.showEnd}
+                    </div>
+                `;
+                
+                scheduleList.appendChild(item);
+            });
+        }
+
+        // Open public view in new window
+        function openPublicView() {
+            const publicWindow = window.open('', '_blank');
+            publicWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Band Schedule - Public View</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                            color: #e0e0e0;
+                            min-height: 100vh;
+                            padding: 40px 20px;
+                        }
+                        .container {
+                            max-width: 1200px;
+                            margin: 0 auto;
+                        }
+                        .schedule-section {
+                            background: rgba(255, 255, 255, 0.05);
+                            backdrop-filter: blur(10px);
+                            border-radius: 15px;
+                            padding: 40px;
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                        }
+                        h1 {
+                            text-align: center;
+                            margin-bottom: 40px;
+                            color: #4a9eff;
+                            font-size: 2.5rem;
+                        }
+                        .schedule-list {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 20px;
+                        }
+                        .schedule-item {
+                            background: rgba(255, 255, 255, 0.08);
+                            border-radius: 12px;
+                            padding: 25px;
+                            border-left: 4px solid #4a9eff;
+                        }
+                        .schedule-item-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 10px;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                        }
+                        .band-info {
+                            display: flex;
+                            align-items: center;
+                            gap: 15px;
+                        }
+                        .band-number-large {
+                            font-size: 1.5rem;
+                            font-weight: bold;
+                            color: #4a9eff;
+                            min-width: 40px;
+                        }
+                        .band-name-large {
+                            font-size: 1.3rem;
+                            font-weight: 600;
+                        }
+                        .time-range {
+                            font-size: 1.1rem;
+                            color: #b0b0b0;
+                            padding: 8px 15px;
+                            background: rgba(74, 158, 255, 0.1);
+                            border-radius: 8px;
+                            border: 1px solid rgba(74, 158, 255, 0.3);
+                        }
+                        .time-breakdown {
+                            font-size: 0.9rem;
+                            color: #888;
+                            margin-top: 8px;
+                            padding-left: 55px;
+                        }
+                        @media (max-width: 768px) {
+                            .schedule-item-header {
+                                flex-direction: column;
+                                align-items: flex-start;
+                            }
+                            .time-range {
+                                width: 100%;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="schedule-section">
+                            <h1>Band Schedule</h1>
+                            <div class="schedule-list">
+                                ${ranges.map((range, index) => `
+                                    <div class="schedule-item">
+                                        <div class="schedule-item-header">
+                                            <div class="band-info">
+                                                <span class="band-number-large">${range.bandNumber}</span>
+                                                <span class="band-name-large">${range.bandName}</span>
+                                            </div>
+                                            <div class="time-range">${range.fullRange}</div>
+                                        </div>
+                                        <div class="time-breakdown">
+                                            Setup: ${range.setupStart} - ${range.setupEnd} | Show: ${range.showStart} - ${range.showEnd}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            publicWindow.document.close();
+        }
+
+        // Print schedule
+        function printSchedule() {
+            window.print();
+        }
+
+        // Save to API (with localStorage fallback)
+        async function saveToAPI() {
+            try {
+                const response = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(scheduleData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save schedule');
+                }
+
+                // Also save to localStorage as backup
+                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            } catch (error) {
+                console.error('Error saving to API:', error);
+                // Fallback to localStorage if API fails
+                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                // Show a subtle notification (optional)
+                console.warn('Saved to local storage as fallback');
+            }
+        }
+
+        // Load from API (with localStorage fallback)
+        async function loadFromAPI() {
+            try {
+                const response = await fetch('/api/schedule');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load schedule');
+                }
+
+                const data = await response.json();
+                if (data && Object.keys(data).length > 0) {
+                    scheduleData = data;
+                    // Also update localStorage as backup
+                    localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                } else {
+                    // If no data, try localStorage
+                    loadFromLocalStorage();
+                }
+            } catch (error) {
+                console.error('Error loading from API:', error);
+                // Fallback to localStorage if API fails
+                loadFromLocalStorage();
+            }
+        }
+
+        // Load from localStorage (fallback)
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('scheduleData');
+            if (saved) {
+                try {
+                    scheduleData = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error parsing localStorage data:', e);
+                }
+            }
+        }
+
+        // Make removeBand available globally
+        window.removeBand = removeBand;
+    </script>
+</body>
+</html>
