@@ -1,5 +1,5 @@
-// Support both Vercel KV and Edge Config
-// Dynamic imports to prevent 404 errors if packages aren't available
+// JSON file storage using GitHub API for data consistency
+// The schedule.json file is stored in the repository and updated via GitHub API
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -12,55 +12,56 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const SCHEDULE_KEY = 'band_schedule_data';
+  const JSON_FILE_PATH = 'data/schedule.json';
+  const GITHUB_REPO = process.env.GITHUB_REPO; // Format: owner/repo (e.g., username/repo-name)
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main'; // or 'master'
 
-  // Determine storage type based on available environment variables
-  function getStorageType() {
-    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
-      return 'kv';
-    } else if (process.env.EDGE_CONFIG) {
-      return 'edge-config';
-    }
-    return 'edge-config'; // Default to edge-config
-  }
-
-  const storageType = getStorageType();
+  // Default data if file doesn't exist
+  const defaultData = {
+    startTime: '18:00',
+    setupMinutes: 15,
+    showMinutes: 30,
+    bands: ['Band 1', 'Band 2', 'Band 3']
+  };
 
   try {
     if (req.method === 'GET') {
-      let data = null;
-
-      if (storageType === 'kv') {
-        // Use KV storage
-        try {
-          const { kv } = await import('@vercel/kv');
-          data = await kv.get(SCHEDULE_KEY);
-        } catch (e) {
-          console.error('KV read error:', e.message);
-          data = null;
-        }
-      } else {
-        // Use Edge Config
-        try {
-          const { get } = await import('@vercel/edge-config');
-          data = await get(SCHEDULE_KEY);
-        } catch (e) {
-          // Edge Config might not have the key yet or not configured
-          console.log('Edge Config read error:', e.message);
-          data = null;
-        }
+      // Read from JSON file
+      if (!GITHUB_REPO || !GITHUB_TOKEN) {
+        // If GitHub not configured, return default data
+        return res.status(200).json(defaultData);
       }
-      
-      if (data) {
+
+      try {
+        // Get file from GitHub
+        const fileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+        const response = await fetch(fileUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Band-Schedule-App'
+          }
+        });
+
+        if (response.status === 404) {
+          // File doesn't exist, return default
+          return res.status(200).json(defaultData);
+        }
+
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+
+        const fileData = await response.json();
+        // Decode base64 content
+        const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
+        const data = JSON.parse(content);
+        
         return res.status(200).json(data);
-      } else {
-        // Return default data if nothing exists
-        const defaultData = {
-          startTime: '18:00',
-          setupMinutes: 15,
-          showMinutes: 30,
-          bands: ['Band 1', 'Band 2', 'Band 3']
-        };
+      } catch (error) {
+        console.error('Error reading from GitHub:', error.message);
+        // Fallback to default data
         return res.status(200).json(defaultData);
       }
     } else if (req.method === 'POST') {
@@ -72,78 +73,69 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data format' });
       }
 
-      if (storageType === 'kv') {
-        // Save to KV store
-        try {
-          const { kv } = await import('@vercel/kv');
-          await kv.set(SCHEDULE_KEY, scheduleData);
-          return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
-        } catch (e) {
-          console.error('KV write error:', e.message);
-          return res.status(500).json({ error: 'Failed to save to KV', details: e.message });
+      if (!GITHUB_REPO || !GITHUB_TOKEN) {
+        return res.status(500).json({ 
+          error: 'GitHub not configured. Please set GITHUB_REPO and GITHUB_TOKEN environment variables.' 
+        });
+      }
+
+      try {
+        // First, get the current file to get its SHA (required for update)
+        const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+        const getResponse = await fetch(getFileUrl, {
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Band-Schedule-App'
+          }
+        });
+
+        let sha = null;
+        if (getResponse.ok) {
+          const fileData = await getResponse.json();
+          sha = fileData.sha;
         }
-      } else {
-        // Use Edge Config
-        // Extract Edge Config ID from connection string
-        // EDGE_CONFIG format: https://edge-config.vercel.com/ecfg_xxx?token=xxx
-        let edgeConfigId = process.env.EDGE_CONFIG_ID;
+
+        // Prepare the new file content
+        const content = JSON.stringify(scheduleData, null, 2);
+        const encodedContent = Buffer.from(content).toString('base64');
+
+        // Update or create the file
+        const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}`;
+        const updateResponse = await fetch(updateUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Band-Schedule-App'
+          },
+          body: JSON.stringify({
+            message: `Update schedule data - ${new Date().toISOString()}`,
+            content: encodedContent,
+            branch: GITHUB_BRANCH,
+            ...(sha && { sha: sha }) // Include SHA if updating existing file
+          })
+        });
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text();
+          throw new Error(`GitHub API error: ${updateResponse.status} - ${errorText}`);
+        }
+
+        const result = await updateResponse.json();
         
-        if (!edgeConfigId && process.env.EDGE_CONFIG) {
-          // Extract ID from URL: https://edge-config.vercel.com/ecfg_xxx?token=xxx
-          const match = process.env.EDGE_CONFIG.match(/ecfg_[a-zA-Z0-9_-]+/);
-          if (match) {
-            edgeConfigId = match[0];
-          }
-        }
-        
-        const vercelApiToken = process.env.VERCEL_API_TOKEN;
-
-        if (!edgeConfigId) {
-          return res.status(500).json({ 
-            error: 'Could not extract Edge Config ID from EDGE_CONFIG. Please set EDGE_CONFIG_ID environment variable with your Edge Config ID (e.g., ecfg_xxx).' 
-          });
-        }
-
-        if (!vercelApiToken) {
-          return res.status(500).json({ 
-            error: 'Edge Config writes require VERCEL_API_TOKEN. Please create a Vercel API token at vercel.com/account/tokens and add it as VERCEL_API_TOKEN environment variable.' 
-          });
-        }
-
-        try {
-          const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
-            method: 'PATCH',
-            headers: {
-              'Authorization': `Bearer ${vercelApiToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              items: [
-                {
-                  operation: 'upsert',
-                  key: SCHEDULE_KEY,
-                  value: scheduleData,
-                },
-              ],
-            }),
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
-          }
-
-          const result = await response.json();
-          
-          if (result.status === 'ok') {
-            return res.status(200).json({ success: true, message: 'Schedule saved successfully' });
-          } else {
-            throw new Error(result.error || 'Failed to update Edge Config');
-          }
-        } catch (e) {
-          console.error('Edge Config write error:', e.message);
-          return res.status(500).json({ error: 'Failed to save to Edge Config', details: e.message });
-        }
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Schedule saved successfully',
+          commit: result.commit
+        });
+      } catch (error) {
+        console.error('Error writing to GitHub:', error.message);
+        return res.status(500).json({ 
+          error: 'Failed to save schedule', 
+          details: error.message 
+        });
       }
     } else {
       return res.status(405).json({ error: 'Method not allowed' });

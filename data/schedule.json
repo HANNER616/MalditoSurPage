@@ -1,0 +1,7 @@
+{
+  "startTime": "18:00",
+  "setupMinutes": 15,
+  "showMinutes": 30,
+  "bands": ["Band 1", "Band 2", "Band 3"]
+}
+
