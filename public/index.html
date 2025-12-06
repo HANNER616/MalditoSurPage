@@ -943,7 +943,7 @@
                 // Fallback to localStorage if API fails
                 localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
                 // Show a subtle notification (optional)
-                console.warn('Saved to local storage as fallback');
+                console.warn('⚠️ Saved to local storage only - changes won\'t sync across devices. Set up GitHub API for data consistency (see QUICK_SETUP.md)');
             }
         }
 
@@ -958,6 +958,12 @@
 
                 const data = await response.json();
                 if (data && Object.keys(data).length > 0) {
+                    // Check if GitHub is not configured
+                    if (data._warning) {
+                        console.warn('⚠️ GitHub not configured - data is stored locally per device. See QUICK_SETUP.md for instructions.');
+                        // Remove warning from data
+                        delete data._warning;
+                    }
                     scheduleData = data;
                     // Also update localStorage as backup
                     localStorage.setItem('scheduleData', JSON.stringify(scheduleData));

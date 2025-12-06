@@ -29,8 +29,12 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Read from JSON file
       if (!GITHUB_REPO || !GITHUB_TOKEN) {
-        // If GitHub not configured, return default data
-        return res.status(200).json(defaultData);
+        // If GitHub not configured, return default data with warning
+        console.warn('GitHub not configured - using default data. Set GITHUB_REPO and GITHUB_TOKEN environment variables.');
+        return res.status(200).json({
+          ...defaultData,
+          _warning: 'GitHub not configured - data not synced across devices'
+        });
       }
 
       try {
