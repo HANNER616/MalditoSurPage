@@ -4,11 +4,14 @@
   "description": "Band schedule management application with Vercel Edge Config storage",
   "main": "index.html",
   "scripts": {
-    "dev": "vercel dev",
+    "serve": "npx http-server public -p 3000 -o",
     "build": "echo 'No build step required'"
   },
   "dependencies": {
     "@vercel/edge-config": "^1.0.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
   },
   "engines": {
     "node": ">=18.x"

@@ -2,14 +2,6 @@
 // Uses Vercel Edge Config for fast, global data storage
 
 export default async function handler(req, res) {
-  // Dynamic import to prevent 404 if package isn't available
-  let get;
-  try {
-    const edgeConfig = await import('@vercel/edge-config');
-    get = edgeConfig.get;
-  } catch (e) {
-    console.error('Failed to import @vercel/edge-config:', e.message);
-  }
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -54,7 +46,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Read from Edge Config
       if (!EDGE_CONFIG) {
-        console.warn('Edge Config not configured - using default data. Set EDGE_CONFIG environment variable.');
+        console.warn('Edge Config not configured - using default data');
         return res.status(200).json({
           ...defaultData,
           _warning: 'Edge Config not configured - data not synced across devices'
@@ -62,10 +54,8 @@ export default async function handler(req, res) {
       }
 
       try {
-        if (!get) {
-          throw new Error('Edge Config package not available');
-        }
-        
+        // Dynamic import to avoid top-level import issues
+        const { get } = await import('@vercel/edge-config');
         const data = await get(SCHEDULE_KEY);
         
         if (data) {
