@@ -933,17 +933,26 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to save schedule');
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || errorData.details || 'Failed to save schedule');
                 }
 
+                const result = await response.json();
+                console.log('✅ Schedule saved successfully:', result);
+                
                 // Also save to localStorage as backup
                 localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
             } catch (error) {
-                console.error('Error saving to API:', error);
+                console.error('❌ Error saving to API:', error.message);
+                // Show detailed error
+                if (error.message.includes('Edge Config') || error.message.includes('EDGE_CONFIG')) {
+                    console.error('⚠️ Edge Config not set up. Please configure EDGE_CONFIG and VERCEL_API_TOKEN environment variables in Vercel. See EDGE_CONFIG_SETUP_COMPLETE.md');
+                } else {
+                    console.error('⚠️ Error details:', error.message);
+                }
                 // Fallback to localStorage if API fails
                 localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
-                // Show a subtle notification (optional)
-                console.warn('⚠️ Saved to local storage only - changes won\'t sync across devices. Set up GitHub API for data consistency (see QUICK_SETUP.md)');
+                console.warn('⚠️ Saved to local storage only - changes won\'t sync across devices.');
             }
         }
 
@@ -958,9 +967,9 @@
 
                 const data = await response.json();
                 if (data && Object.keys(data).length > 0) {
-                    // Check if GitHub is not configured
+                    // Check if Edge Config is not configured
                     if (data._warning) {
-                        console.warn('⚠️ GitHub not configured - data is stored locally per device. See QUICK_SETUP.md for instructions.');
+                        console.warn('⚠️ Edge Config not configured - data is stored locally per device. See EDGE_CONFIG_SETUP_COMPLETE.md for instructions.');
                         // Remove warning from data
                         delete data._warning;
                     }

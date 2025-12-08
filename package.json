@@ -1,13 +1,15 @@
 {
   "name": "band-schedule-app",
   "version": "1.0.0",
-  "description": "Band schedule management application with JSON file storage",
+  "description": "Band schedule management application with Vercel Edge Config storage",
   "main": "index.html",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@vercel/edge-config": "^1.0.1"
+  },
   "engines": {
     "node": ">=18.x"
   }

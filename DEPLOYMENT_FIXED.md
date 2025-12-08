@@ -51,3 +51,4 @@ Vercel by default looks for static files in a `public/` folder. By moving `index
 
 Everything should work now! 🚀
 
+

@@ -1,5 +1,7 @@
-// JSON file storage using GitHub API for data consistency
-// The schedule.json file is stored in the repository and updated via GitHub API
+// Edge Config storage for data persistence
+// Uses Vercel Edge Config for fast, global data storage
+
+import { get } from '@vercel/edge-config';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -12,12 +14,12 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const JSON_FILE_PATH = 'data/schedule.json';
-  const GITHUB_REPO = process.env.GITHUB_REPO; // Format: owner/repo (e.g., username/repo-name)
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-  const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main'; // or 'master'
+  const SCHEDULE_KEY = 'band_schedule_data';
+  const EDGE_CONFIG_ID = process.env.EDGE_CONFIG_ID;
+  const EDGE_CONFIG = process.env.EDGE_CONFIG;
+  const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN;
 
-  // Default data if file doesn't exist
+  // Default data if nothing exists
   const defaultData = {
     startTime: '18:00',
     setupMinutes: 15,
@@ -25,46 +27,45 @@ export default async function handler(req, res) {
     bands: ['Band 1', 'Band 2', 'Band 3']
   };
 
+  // Extract Edge Config ID from connection string if not provided
+  function getEdgeConfigId() {
+    if (EDGE_CONFIG_ID) {
+      return EDGE_CONFIG_ID;
+    }
+    if (EDGE_CONFIG) {
+      // Extract ID from URL: https://edge-config.vercel.com/ecfg_xxx?token=xxx
+      const match = EDGE_CONFIG.match(/ecfg_[a-zA-Z0-9_-]+/);
+      if (match) {
+        return match[0];
+      }
+    }
+    return null;
+  }
+
+  const edgeConfigId = getEdgeConfigId();
+
   try {
     if (req.method === 'GET') {
-      // Read from JSON file
-      if (!GITHUB_REPO || !GITHUB_TOKEN) {
-        // If GitHub not configured, return default data with warning
-        console.warn('GitHub not configured - using default data. Set GITHUB_REPO and GITHUB_TOKEN environment variables.');
+      // Read from Edge Config
+      if (!EDGE_CONFIG) {
+        console.warn('Edge Config not configured - using default data. Set EDGE_CONFIG environment variable.');
         return res.status(200).json({
           ...defaultData,
-          _warning: 'GitHub not configured - data not synced across devices'
+          _warning: 'Edge Config not configured - data not synced across devices'
         });
       }
 
       try {
-        // Get file from GitHub
-        const fileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}?ref=${GITHUB_BRANCH}`;
-        const response = await fetch(fileUrl, {
-          headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'Band-Schedule-App'
-          }
-        });
-
-        if (response.status === 404) {
-          // File doesn't exist, return default
+        const data = await get(SCHEDULE_KEY);
+        
+        if (data) {
+          return res.status(200).json(data);
+        } else {
+          // Return default data if key doesn't exist
           return res.status(200).json(defaultData);
         }
-
-        if (!response.ok) {
-          throw new Error(`GitHub API error: ${response.status}`);
-        }
-
-        const fileData = await response.json();
-        // Decode base64 content
-        const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
-        const data = JSON.parse(content);
-        
-        return res.status(200).json(data);
       } catch (error) {
-        console.error('Error reading from GitHub:', error.message);
+        console.error('Error reading from Edge Config:', error.message);
         // Fallback to default data
         return res.status(200).json(defaultData);
       }
@@ -77,67 +78,66 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid data format' });
       }
 
-      if (!GITHUB_REPO || !GITHUB_TOKEN) {
+      if (!edgeConfigId) {
         return res.status(500).json({ 
-          error: 'GitHub not configured. Please set GITHUB_REPO and GITHUB_TOKEN environment variables.' 
+          error: 'Edge Config ID not found. Please set EDGE_CONFIG_ID environment variable or ensure EDGE_CONFIG contains the ID (ecfg_xxx).' 
+        });
+      }
+
+      if (!VERCEL_API_TOKEN) {
+        return res.status(500).json({ 
+          error: 'VERCEL_API_TOKEN not set. Please create a Vercel API token and add it as VERCEL_API_TOKEN environment variable.' 
         });
       }
 
       try {
-        // First, get the current file to get its SHA (required for update)
-        const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}?ref=${GITHUB_BRANCH}`;
-        const getResponse = await fetch(getFileUrl, {
+        // Write to Edge Config using Vercel API
+        const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
+          method: 'PATCH',
           headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'Band-Schedule-App'
-          }
-        });
-
-        let sha = null;
-        if (getResponse.ok) {
-          const fileData = await getResponse.json();
-          sha = fileData.sha;
-        }
-
-        // Prepare the new file content
-        const content = JSON.stringify(scheduleData, null, 2);
-        const encodedContent = Buffer.from(content).toString('base64');
-
-        // Update or create the file
-        const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${JSON_FILE_PATH}`;
-        const updateResponse = await fetch(updateUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `Bearer ${VERCEL_API_TOKEN}`,
             'Content-Type': 'application/json',
-            'User-Agent': 'Band-Schedule-App'
           },
           body: JSON.stringify({
-            message: `Update schedule data - ${new Date().toISOString()}`,
-            content: encodedContent,
-            branch: GITHUB_BRANCH,
-            ...(sha && { sha: sha }) // Include SHA if updating existing file
-          })
+            items: [
+              {
+                operation: 'upsert',
+                key: SCHEDULE_KEY,
+                value: scheduleData,
+              },
+            ],
+          }),
         });
 
-        if (!updateResponse.ok) {
-          const errorText = await updateResponse.text();
-          throw new Error(`GitHub API error: ${updateResponse.status} - ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage = `Edge Config API error: ${response.status}`;
+          
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage += ` - ${errorData.error || errorText}`;
+          } catch {
+            errorMessage += ` - ${errorText}`;
+          }
+          
+          throw new Error(errorMessage);
         }
 
-        const result = await updateResponse.json();
+        const result = await response.json();
         
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Schedule saved successfully',
-          commit: result.commit
-        });
+        if (result.status === 'ok') {
+          return res.status(200).json({ 
+            success: true, 
+            message: 'Schedule saved successfully to Edge Config',
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          throw new Error(result.error || 'Failed to update Edge Config');
+        }
       } catch (error) {
-        console.error('Error writing to GitHub:', error.message);
+        console.error('Error writing to Edge Config:', error.message);
         return res.status(500).json({ 
-          error: 'Failed to save schedule', 
+          error: 'Failed to save schedule to Edge Config', 
           details: error.message 
         });
       }

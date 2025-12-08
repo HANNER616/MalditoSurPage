@@ -95,3 +95,4 @@ Edge Config is **read-optimized** and writes can be slower than KV. For a schedu
 
 Your current setup with Edge Config will work fine for this use case!
 
+
