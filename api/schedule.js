@@ -1,9 +1,15 @@
 // Edge Config storage for data persistence
 // Uses Vercel Edge Config for fast, global data storage
 
-import { get } from '@vercel/edge-config';
-
 export default async function handler(req, res) {
+  // Dynamic import to prevent 404 if package isn't available
+  let get;
+  try {
+    const edgeConfig = await import('@vercel/edge-config');
+    get = edgeConfig.get;
+  } catch (e) {
+    console.error('Failed to import @vercel/edge-config:', e.message);
+  }
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -56,6 +62,10 @@ export default async function handler(req, res) {
       }
 
       try {
+        if (!get) {
+          throw new Error('Edge Config package not available');
+        }
+        
         const data = await get(SCHEDULE_KEY);
         
         if (data) {
