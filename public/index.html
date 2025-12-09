@@ -524,9 +524,8 @@
             </div>
 
             <div class="editor-actions">
-                <button type="button" class="btn" id="generateScheduleBtn">Generate Schedule</button>
-                <button type="button" class="btn btn-secondary" id="openPublicViewBtn">Open Public View</button>
-                <button type="button" class="btn btn-secondary" id="printScheduleBtn">Print Schedule</button>
+                <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="generateScheduleBtn">Generate Schedule</button>
                 <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
             </div>
         </div>
@@ -572,16 +571,15 @@
             // Login form
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             
-            // Editor controls
-            document.getElementById('startTime').addEventListener('change', updateSchedule);
-            document.getElementById('setupMinutes').addEventListener('input', updateSchedule);
-            document.getElementById('showMinutes').addEventListener('input', updateSchedule);
+            // Editor controls - no auto-save, just update display
+            document.getElementById('startTime').addEventListener('change', updateScheduleDisplay);
+            document.getElementById('setupMinutes').addEventListener('input', updateScheduleDisplay);
+            document.getElementById('showMinutes').addEventListener('input', updateScheduleDisplay);
             
             // Editor actions
-            document.getElementById('generateScheduleBtn').addEventListener('click', updateSchedule);
+            document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
+            document.getElementById('generateScheduleBtn').addEventListener('click', updateScheduleDisplay);
             document.getElementById('addBandBtn').addEventListener('click', addBand);
-            document.getElementById('openPublicViewBtn').addEventListener('click', openPublicView);
-            document.getElementById('printScheduleBtn').addEventListener('click', printSchedule);
             document.getElementById('logoutBtn').addEventListener('click', logout);
         }
 
@@ -645,8 +643,7 @@
             const input = div.querySelector('.band-name-input');
             input.addEventListener('input', function() {
                 scheduleData.bands[index] = this.value;
-                saveToAPI();
-                updateSchedule();
+                updateScheduleDisplay();
             });
             
             // Drag and drop
@@ -688,9 +685,8 @@
                 const [movedBand] = scheduleData.bands.splice(fromIndex, 1);
                 scheduleData.bands.splice(toIndex, 0, movedBand);
                 
-                saveToAPI();
                 renderEditor();
-                updateSchedule();
+                updateScheduleDisplay();
             }
             
             return false;
@@ -701,31 +697,48 @@
         }
 
         // Add band
-        async function addBand() {
+        function addBand() {
             scheduleData.bands.push(`Band ${scheduleData.bands.length + 1}`);
-            await saveToAPI();
             renderEditor();
-            updateSchedule();
+            updateScheduleDisplay();
         }
 
         // Remove band
-        async function removeBand(index) {
+        function removeBand(index) {
             if (scheduleData.bands.length > 1) {
                 scheduleData.bands.splice(index, 1);
-                await saveToAPI();
                 renderEditor();
-                updateSchedule();
+                updateScheduleDisplay();
             }
         }
 
-        // Update schedule
-        async function updateSchedule() {
+        // Update schedule display (no save)
+        function updateScheduleDisplay() {
             scheduleData.startTime = document.getElementById('startTime').value || scheduleData.startTime;
             scheduleData.setupMinutes = parseInt(document.getElementById('setupMinutes').value) || scheduleData.setupMinutes;
             scheduleData.showMinutes = parseInt(document.getElementById('showMinutes').value) || scheduleData.showMinutes;
             
-            await saveToAPI();
             renderSchedule();
+        }
+
+        // Save changes to API
+        async function saveChanges() {
+            // Update data from inputs first
+            updateScheduleDisplay();
+            
+            // Save to API
+            await saveToAPI();
+            
+            // Show feedback
+            const btn = document.getElementById('saveChangesBtn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Saved!';
+            btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
         }
 
         // Calculate time ranges
@@ -794,132 +807,6 @@
             });
         }
 
-        // Open public view in new window
-        function openPublicView() {
-            const publicWindow = window.open('', '_blank');
-            publicWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Band Schedule - Public View</title>
-                    <style>
-                        * { margin: 0; padding: 0; box-sizing: border-box; }
-                        body {
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                            color: #e0e0e0;
-                            min-height: 100vh;
-                            padding: 40px 20px;
-                        }
-                        .container {
-                            max-width: 1200px;
-                            margin: 0 auto;
-                        }
-                        .schedule-section {
-                            background: rgba(255, 255, 255, 0.05);
-                            backdrop-filter: blur(10px);
-                            border-radius: 15px;
-                            padding: 40px;
-                            border: 1px solid rgba(255, 255, 255, 0.1);
-                            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                        }
-                        h1 {
-                            text-align: center;
-                            margin-bottom: 40px;
-                            color: #4a9eff;
-                            font-size: 2.5rem;
-                        }
-                        .schedule-list {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 20px;
-                        }
-                        .schedule-item {
-                            background: rgba(255, 255, 255, 0.08);
-                            border-radius: 12px;
-                            padding: 25px;
-                            border-left: 4px solid #4a9eff;
-                        }
-                        .schedule-item-header {
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            margin-bottom: 10px;
-                            flex-wrap: wrap;
-                            gap: 10px;
-                        }
-                        .band-info {
-                            display: flex;
-                            align-items: center;
-                            gap: 15px;
-                        }
-                        .band-number-large {
-                            font-size: 1.5rem;
-                            font-weight: bold;
-                            color: #4a9eff;
-                            min-width: 40px;
-                        }
-                        .band-name-large {
-                            font-size: 1.3rem;
-                            font-weight: 600;
-                        }
-                        .time-range {
-                            font-size: 1.1rem;
-                            color: #b0b0b0;
-                            padding: 8px 15px;
-                            background: rgba(74, 158, 255, 0.1);
-                            border-radius: 8px;
-                            border: 1px solid rgba(74, 158, 255, 0.3);
-                        }
-                        .time-breakdown {
-                            font-size: 0.9rem;
-                            color: #888;
-                            margin-top: 8px;
-                            padding-left: 55px;
-                        }
-                        @media (max-width: 768px) {
-                            .schedule-item-header {
-                                flex-direction: column;
-                                align-items: flex-start;
-                            }
-                            .time-range {
-                                width: 100%;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="schedule-section">
-                            <h1>Band Schedule</h1>
-                            <div class="schedule-list">
-                                ${ranges.map((range, index) => `
-                                    <div class="schedule-item">
-                                        <div class="schedule-item-header">
-                                            <div class="band-info">
-                                                <span class="band-number-large">${range.bandNumber}</span>
-                                                <span class="band-name-large">${range.bandName}</span>
-                                            </div>
-                                            <div class="time-range">${range.fullRange}</div>
-                                        </div>
-                                        <div class="time-breakdown">
-                                            Setup: ${range.setupStart} - ${range.setupEnd} | Show: ${range.showStart} - ${range.showEnd}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `);
-            publicWindow.document.close();
-        }
-
-        // Print schedule
-        function printSchedule() {
-            window.print();
-        }
 
         // Save to API (with localStorage fallback)
         async function saveToAPI() {
