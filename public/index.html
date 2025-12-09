@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Band Schedule</title>
+    <title>Maldito Sur III Edición</title>
     <style>
         * {
             margin: 0;
@@ -44,7 +44,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(22, 33, 62, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.7) 100%);
             z-index: -1;
         }
 
@@ -525,14 +525,13 @@
 
             <div class="editor-actions">
                 <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
-                <button type="button" class="btn btn-secondary" id="generateScheduleBtn">Generate Schedule</button>
                 <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
             </div>
         </div>
 
         <!-- Public Schedule -->
         <div class="schedule-section" id="scheduleSection">
-            <h1>Band Schedule</h1>
+            <h1>Horarios Maldito Sur III Edición</h1>
             <div class="schedule-list" id="scheduleList">
                 <!-- Schedule items will be generated here -->
             </div>
@@ -578,7 +577,6 @@
             
             // Editor actions
             document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
-            document.getElementById('generateScheduleBtn').addEventListener('click', updateScheduleDisplay);
             document.getElementById('addBandBtn').addEventListener('click', addBand);
             document.getElementById('logoutBtn').addEventListener('click', logout);
         }
