@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -163,6 +164,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -284,6 +286,7 @@
             from {
                 opacity: 0;
             }
+
             to {
                 opacity: 1;
             }
@@ -318,6 +321,7 @@
                 opacity: 0;
                 transform: translateX(-30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -390,9 +394,19 @@
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
         }
 
         /* Responsive Design */
@@ -480,55 +494,58 @@
         }
     </style>
     <!-- Vercel Web Analytics -->
-    <script defer src="https://cdn.vercel-analytics.com/v1/script.js"></script>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- Login Section -->
         <div class="login-section" id="loginSection">
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="btn">Login</button>
-            </form>
-            <div class="error-message" id="loginError"></div>
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <div class="error-message" id="loginError"></div>
+    </div>
+
+    <!-- Editor Panel -->
+    <div class="editor-panel" id="editorPanel">
+        <h2>Schedule Editor</h2>
+
+        <div class="editor-controls">
+            <div class="form-group">
+                <label for="startTime">Start Time (HH:MM)</label>
+                <input type="time" id="startTime" required>
+            </div>
+            <div class="form-group">
+                <label for="setupMinutes">Setup Duration (minutes)</label>
+                <input type="number" id="setupMinutes" min="0" value="15" required>
+            </div>
+            <div class="form-group">
+                <label for="showMinutes">Show Duration (minutes)</label>
+                <input type="number" id="showMinutes" min="0" value="30" required>
+            </div>
         </div>
 
-        <!-- Editor Panel -->
-        <div class="editor-panel" id="editorPanel">
-            <h2>Schedule Editor</h2>
-            
-            <div class="editor-controls">
-                <div class="form-group">
-                    <label for="startTime">Start Time (HH:MM)</label>
-                    <input type="time" id="startTime" required>
-                </div>
-                <div class="form-group">
-                    <label for="setupMinutes">Setup Duration (minutes)</label>
-                    <input type="number" id="setupMinutes" min="0" value="15" required>
-                </div>
-                <div class="form-group">
-                    <label for="showMinutes">Show Duration (minutes)</label>
-                    <input type="number" id="showMinutes" min="0" value="30" required>
-                </div>
-            </div>
+        <div class="bands-editor">
+            <h3>Bands</h3>
+            <div id="bandsList"></div>
+            <button type="button" class="btn btn-secondary" id="addBandBtn" style="margin-top: 15px;">Add Band</button>
+        </div>
 
-            <div class="bands-editor">
-                <h3>Bands</h3>
-                <div id="bandsList"></div>
-                <button type="button" class="btn btn-secondary" id="addBandBtn" style="margin-top: 15px;">Add Band</button>
-            </div>
-
-            <div class="editor-actions">
-                <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
-                <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
-            </div>
+        <div class="editor-actions">
+            <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
+            <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
+        </div>
         </div>
 
         <!-- Public Schedule -->
@@ -539,6 +556,7 @@
             </div>
         </div>
     </div>
+</body>
 
     <script>
         // State management
@@ -550,7 +568,7 @@
         };
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             await loadFromAPI();
             renderSchedule();
             setupEventListeners();
@@ -571,12 +589,12 @@
         function setupEventListeners() {
             // Login form
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            
+
             // Editor controls - no auto-save, just update display
             document.getElementById('startTime').addEventListener('change', updateScheduleDisplay);
             document.getElementById('setupMinutes').addEventListener('input', updateScheduleDisplay);
             document.getElementById('showMinutes').addEventListener('input', updateScheduleDisplay);
-            
+
             // Editor actions
             document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
             document.getElementById('addBandBtn').addEventListener('click', addBand);
@@ -616,10 +634,10 @@
             document.getElementById('startTime').value = scheduleData.startTime;
             document.getElementById('setupMinutes').value = scheduleData.setupMinutes;
             document.getElementById('showMinutes').value = scheduleData.showMinutes;
-            
+
             const bandsList = document.getElementById('bandsList');
             bandsList.innerHTML = '';
-            
+
             scheduleData.bands.forEach((band, index) => {
                 const bandItem = createBandEditorItem(band, index);
                 bandsList.appendChild(bandItem);
@@ -632,26 +650,26 @@
             div.className = 'band-item';
             div.draggable = true;
             div.dataset.index = index;
-            
+
             div.innerHTML = `
                 <span class="band-number">${index + 1}</span>
                 <span class="drag-handle">☰</span>
                 <input type="text" value="${bandName}" class="band-name-input" data-index="${index}">
                 <button type="button" class="btn btn-danger" style="padding: 5px 15px; font-size: 0.9rem;" onclick="removeBand(${index})">Remove</button>
             `;
-            
+
             const input = div.querySelector('.band-name-input');
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 scheduleData.bands[index] = this.value;
                 updateScheduleDisplay();
             });
-            
+
             // Drag and drop
             div.addEventListener('dragstart', handleDragStart);
             div.addEventListener('dragover', handleDragOver);
             div.addEventListener('drop', handleDrop);
             div.addEventListener('dragend', handleDragEnd);
-            
+
             return div;
         }
 
@@ -676,19 +694,19 @@
             if (e.stopPropagation) {
                 e.stopPropagation();
             }
-            
+
             if (draggedElement !== this) {
                 const fromIndex = parseInt(draggedElement.dataset.index);
                 const toIndex = parseInt(this.dataset.index);
-                
+
                 // Reorder bands array
                 const [movedBand] = scheduleData.bands.splice(fromIndex, 1);
                 scheduleData.bands.splice(toIndex, 0, movedBand);
-                
+
                 renderEditor();
                 updateScheduleDisplay();
             }
-            
+
             return false;
         }
 
@@ -717,7 +735,7 @@
             scheduleData.startTime = document.getElementById('startTime').value || scheduleData.startTime;
             scheduleData.setupMinutes = parseInt(document.getElementById('setupMinutes').value) || scheduleData.setupMinutes;
             scheduleData.showMinutes = parseInt(document.getElementById('showMinutes').value) || scheduleData.showMinutes;
-            
+
             renderSchedule();
         }
 
@@ -725,16 +743,16 @@
         async function saveChanges() {
             // Update data from inputs first
             updateScheduleDisplay();
-            
+
             // Save to API
             await saveToAPI();
-            
+
             // Show feedback
             const btn = document.getElementById('saveChangesBtn');
             const originalText = btn.textContent;
             btn.textContent = 'Saved!';
             btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-            
+
             setTimeout(() => {
                 btn.textContent = originalText;
                 btn.style.background = '';
@@ -746,15 +764,15 @@
             const [startHour, startMinute] = scheduleData.startTime.split(':').map(Number);
             let currentTime = new Date();
             currentTime.setHours(startHour, startMinute, 0, 0);
-            
+
             const ranges = [];
-            
+
             scheduleData.bands.forEach((band, index) => {
                 const setupStart = new Date(currentTime);
                 const setupEnd = new Date(currentTime.getTime() + scheduleData.setupMinutes * 60000);
                 const showStart = new Date(setupEnd);
                 const showEnd = new Date(showStart.getTime() + scheduleData.showMinutes * 60000);
-                
+
                 ranges.push({
                     bandNumber: index + 1,
                     bandName: band,
@@ -764,10 +782,10 @@
                     showEnd: formatTime(showEnd),
                     fullRange: `${formatTime(setupStart)} - ${formatTime(showEnd)}`
                 });
-                
+
                 currentTime = showEnd;
             });
-            
+
             return ranges;
         }
 
@@ -782,14 +800,14 @@
         function renderSchedule() {
             const scheduleList = document.getElementById('scheduleList');
             const ranges = calculateTimeRanges();
-            
+
             scheduleList.innerHTML = '';
-            
+
             ranges.forEach((range, index) => {
                 const item = document.createElement('div');
                 item.className = 'schedule-item';
                 item.style.animationDelay = `${index * 0.1}s`;
-                
+
                 item.innerHTML = `
                     <div class="schedule-item-header">
                         <div class="band-info">
@@ -802,7 +820,7 @@
                         Setup: ${range.setupStart} - ${range.setupEnd} | Show: ${range.showStart} - ${range.showEnd}
                     </div>
                 `;
-                
+
                 scheduleList.appendChild(item);
             });
         }
@@ -826,7 +844,7 @@
 
                 const result = await response.json();
                 console.log('✅ Schedule saved successfully:', result);
-                
+
                 // Also save to localStorage as backup
                 localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
             } catch (error) {
@@ -847,7 +865,7 @@
         async function loadFromAPI() {
             try {
                 const response = await fetch('/api/schedule');
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to load schedule');
                 }
@@ -889,5 +907,6 @@
         // Make removeBand available globally
         window.removeBand = removeBand;
     </script>
-</body>
+    </body>
+
 </html>
