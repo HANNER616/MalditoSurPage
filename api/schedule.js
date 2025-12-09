@@ -1,6 +1,4 @@
 // Edge Config storage for data persistence
-// Uses Vercel Edge Config for fast, global data storage
-
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,7 +29,6 @@ export default async function handler(req, res) {
       return EDGE_CONFIG_ID;
     }
     if (EDGE_CONFIG) {
-      // Extract ID from URL: https://edge-config.vercel.com/ecfg_xxx?token=xxx
       const match = EDGE_CONFIG.match(/ecfg_[a-zA-Z0-9_-]+/);
       if (match) {
         return match[0];
@@ -46,7 +43,6 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Read from Edge Config
       if (!EDGE_CONFIG) {
-        console.warn('Edge Config not configured - using default data');
         return res.status(200).json({
           ...defaultData,
           _warning: 'Edge Config not configured - data not synced across devices'
@@ -54,44 +50,39 @@ export default async function handler(req, res) {
       }
 
       try {
-        // Dynamic import to avoid top-level import issues
         const { get } = await import('@vercel/edge-config');
         const data = await get(SCHEDULE_KEY);
         
         if (data) {
           return res.status(200).json(data);
         } else {
-          // Return default data if key doesn't exist
           return res.status(200).json(defaultData);
         }
       } catch (error) {
         console.error('Error reading from Edge Config:', error.message);
-        // Fallback to default data
         return res.status(200).json(defaultData);
       }
     } else if (req.method === 'POST') {
       // Save schedule data
       const scheduleData = req.body;
       
-      // Validate data structure
       if (!scheduleData || typeof scheduleData !== 'object') {
         return res.status(400).json({ error: 'Invalid data format' });
       }
 
       if (!edgeConfigId) {
         return res.status(500).json({ 
-          error: 'Edge Config ID not found. Please set EDGE_CONFIG_ID environment variable or ensure EDGE_CONFIG contains the ID (ecfg_xxx).' 
+          error: 'Edge Config ID not found. Please set EDGE_CONFIG_ID environment variable.' 
         });
       }
 
       if (!VERCEL_API_TOKEN) {
         return res.status(500).json({ 
-          error: 'VERCEL_API_TOKEN not set. Please create a Vercel API token and add it as VERCEL_API_TOKEN environment variable.' 
+          error: 'VERCEL_API_TOKEN not set. Please create a Vercel API token.' 
         });
       }
 
       try {
-        // Write to Edge Config using Vercel API
         const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`, {
           method: 'PATCH',
           headers: {
@@ -111,16 +102,7 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          let errorMessage = `Edge Config API error: ${response.status}`;
-          
-          try {
-            const errorData = JSON.parse(errorText);
-            errorMessage += ` - ${errorData.error || errorText}`;
-          } catch {
-            errorMessage += ` - ${errorText}`;
-          }
-          
-          throw new Error(errorMessage);
+          throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
         }
 
         const result = await response.json();
@@ -128,7 +110,7 @@ export default async function handler(req, res) {
         if (result.status === 'ok') {
           return res.status(200).json({ 
             success: true, 
-            message: 'Schedule saved successfully to Edge Config',
+            message: 'Schedule saved successfully',
             timestamp: new Date().toISOString()
           });
         } else {
@@ -137,7 +119,7 @@ export default async function handler(req, res) {
       } catch (error) {
         console.error('Error writing to Edge Config:', error.message);
         return res.status(500).json({ 
-          error: 'Failed to save schedule to Edge Config', 
+          error: 'Failed to save schedule', 
           details: error.message 
         });
       }
