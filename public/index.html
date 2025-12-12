@@ -107,7 +107,7 @@
 
         .btn {
             padding: 10px 25px;
-            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            background: rgb(0, 0, 0);
             border: none;
             border-radius: 8px;
             color: white;
@@ -277,9 +277,11 @@
             backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(253, 252, 252, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             animation: fadeIn 0.5s ease;
+           
+           
         }
 
         @keyframes fadeIn {
@@ -294,10 +296,20 @@
 
         .schedule-section h1 {
             text-align: center;
-            margin-bottom: 40px;
-            color: #4a9eff;
+            margin-bottom: 25px;
+            color: #535353;
             font-size: 2.5rem;
-            text-shadow: 0 2px 10px rgba(74, 158, 255, 0.3);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            text-shadow:
+                1px 1px 0 #000000,
+                /* Sombra inferior derecha (borde) */
+                -1px 1px 0 #000000,
+                /* Sombra inferior izquierda */
+                1px -1px 0 #000000,
+                /* Sombra superior derecha */
+                -1px -1px 0 #000000;
+            /* Sombra superior izquierda */
+
         }
 
         .schedule-list {
@@ -310,7 +322,7 @@
             background: rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             padding: 25px;
-            border-left: 4px solid #4a9eff;
+            border-left: 4px solid #000000;
             transition: all 0.3s ease;
             animation: slideInLeft 0.5s ease;
             animation-fill-mode: both;
@@ -352,30 +364,43 @@
         .band-number-large {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #4a9eff;
+            color: #000000;
             min-width: 40px;
         }
 
         .band-name-large {
             font-size: 1.3rem;
             font-weight: 600;
-            color: #e0e0e0;
+            color: #535353;
+            text-shadow:
+                1px 1px 0 #000000,
+                /* Sombra inferior derecha (borde) */
+                -1px 1px 0 #000000,
+                /* Sombra inferior izquierda */
+                1px -1px 0 #000000,
+                /* Sombra superior derecha */
+                -1px -1px 0 #000000;
+            /* Sombra superior izquierda */
+
         }
 
         .time-range {
             font-size: 1.1rem;
-            color: #b0b0b0;
+            color: #000000;
             padding: 8px 15px;
-            background: rgba(74, 158, 255, 0.1);
+            background: #74737344;
             border-radius: 8px;
-            border: 1px solid rgba(74, 158, 255, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+
         }
 
         .time-breakdown {
             font-size: 0.9rem;
             color: #888;
             margin-top: 8px;
-            padding-left: 55px;
+            padding: center;
+
+
         }
 
         .error-message {
@@ -492,6 +517,84 @@
                 color: #000;
             }
         }
+
+        .footer-content {
+            text-align: center;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+
+        }
+
+        .footer-content p {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #535353;
+            text-shadow:
+                1px 1px 0 #000000,
+                /* Sombra inferior derecha (borde) */
+                -1px 1px 0 #000000,
+                /* Sombra inferior izquierda */
+                -1px -1px 0 #000000;
+            /* Sombra superior izquierda */
+        }
+
+        /* Botón Login superior */
+        .login-btn {
+            
+            
+            padding: 8px 18px;
+            
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            color: #e0e0e0;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            z-index: 50;
+            transition: 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Modal de fondo oscuro difuminado */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            z-index: 40;
+        }
+
+        /* Convertir login-section en modal */
+        .login-section {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            z-index: 100;
+            display: none;
+            /* oculto por defecto */
+        }
+
+        .login-section.visible {
+            display: block;
+        }
+
+        /* Ocultar secciones detrás del modal */
+        .body-blurred {
+            filter: blur(6px);
+            pointer-events: none;
+        }
+
+
     </style>
     <!-- Vercel Web Analytics -->
     <script>
@@ -499,316 +602,331 @@
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
+
 <body>
+    <!-- Login Section -->
     <div class="container">
-        <!-- Login Section -->
-        <div class="login-section" id="loginSection">
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit" class="btn">Login</button>
-        </form>
-        <div class="error-message" id="loginError"></div>
-    </div>
-
-    <!-- Editor Panel -->
-    <div class="editor-panel" id="editorPanel">
-        <h2>Schedule Editor</h2>
-
-        <div class="editor-controls">
-            <div class="form-group">
-                <label for="startTime">Start Time (HH:MM)</label>
-                <input type="time" id="startTime" required>
-            </div>
-            <div class="form-group">
-                <label for="setupMinutes">Setup Duration (minutes)</label>
-                <input type="number" id="setupMinutes" min="0" value="15" required>
-            </div>
-            <div class="form-group">
-                <label for="showMinutes">Show Duration (minutes)</label>
-                <input type="number" id="showMinutes" min="0" value="30" required>
-            </div>
+        <div id="modalBackdrop" class="modal-backdrop"></div>
+        <div class="login-section hidden" id="loginSection">
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div class="error-message" id="loginError"></div>
         </div>
-
-        <div class="bands-editor">
-            <h3>Bands</h3>
-            <div id="bandsList"></div>
-            <button type="button" class="btn btn-secondary" id="addBandBtn" style="margin-top: 15px;">Add Band</button>
-        </div>
-
-        <div class="editor-actions">
-            <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
-            <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
-        </div>
-        </div>
-
-        <!-- Public Schedule -->
-        <div class="schedule-section" id="scheduleSection">
-            <h1>Horarios Maldito Sur III Edición</h1>
-            <div class="schedule-list" id="scheduleList">
+        
+        <!-- Editor Panel -->
+        <div class="editor-panel" id="editorPanel">
+            <h2>Schedule Editor</h2>
+            
+            <div class="editor-controls">
+                <div class="form-group">
+                    <label for="startTime">Start Time (HH:MM)</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="setupMinutes">Setup Duration (minutes)</label>
+                    <input type="number" id="setupMinutes" min="0" value="15" required>
+                </div>
+                <div class="form-group">
+                    <label for="showMinutes">Show Duration (minutes)</label>
+                    <input type="number" id="showMinutes" min="0" value="30" required>
+                </div>
+            </div>
+            
+            <div class="bands-editor">
+                <h3>Bands</h3>
+                <div id="bandsList"></div>
+                <button type="button" class="btn btn-secondary" id="addBandBtn" style="margin-top: 15px;">Add
+                    Band</button>
+                </div>
+                
+                <div class="editor-actions">
+                    <button type="button" class="btn" id="saveChangesBtn">Save Changes</button>
+                    <button type="button" class="btn btn-danger" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+            
+            <!-- Public Schedule -->
+            <div class="schedule-section" id="scheduleSection">
+                <h1>Horario Maldito Sur III Edición</h1>
+                <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                    <button id="loginBtn" class="login-btn">Login</button>
+                </div>
+                <span></span>
+                <div class="schedule-list" id="scheduleList">
                 <!-- Schedule items will be generated here -->
             </div>
         </div>
     </div>
 </body>
 
-    <script>
-        // State management
-        let scheduleData = {
-            startTime: '18:00',
-            setupMinutes: 15,
-            showMinutes: 30,
-            bands: ['Band 1', 'Band 2', 'Band 3']
-        };
+<footer>
+    <div class="footer-content">
+        <p>Copyright © 2025 Maldito Sur III Edición. Todos los derechos reservados.</p>
+        <p>Developed by Hanner616 </p>
+    </div>
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function () {
-            await loadFromAPI();
-            renderSchedule();
-            setupEventListeners();
-            checkLoginStatus();
+</footer>
+
+<script>
+    // State management
+    let scheduleData = {
+        startTime: '18:00',
+        setupMinutes: 15,
+        showMinutes: 30,
+        bands: ['Band 1', 'Band 2', 'Band 3']
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async function () {
+        await loadFromAPI();
+        renderSchedule();
+        setupEventListeners();
+        checkLoginStatus();
+    });
+
+    // Check if user is logged in
+    function checkLoginStatus() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (isLoggedIn) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('editorPanel').classList.add('visible');
+            renderEditor();
+        }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+        // Editor controls - no auto-save, just update display
+        document.getElementById('startTime').addEventListener('change', updateScheduleDisplay);
+        document.getElementById('setupMinutes').addEventListener('input', updateScheduleDisplay);
+        document.getElementById('showMinutes').addEventListener('input', updateScheduleDisplay);
+
+        // Editor actions
+        document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
+        document.getElementById('addBandBtn').addEventListener('click', addBand);
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    }
+
+    // Login handler
+    function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('loginError');
+
+        if (username === 'admin' && password === 'admin') {
+            errorDiv.classList.remove('visible');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('editorPanel').classList.add('visible');
+            localStorage.setItem('isLoggedIn', 'true');
+            renderEditor();
+        } else {
+            errorDiv.textContent = 'Invalid credentials. Username: admin, Password: admin';
+            errorDiv.classList.add('visible');
+        }
+    }
+
+    // Logout handler
+    function logout() {
+        localStorage.setItem('isLoggedIn', 'false');
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('editorPanel').classList.remove('visible');
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    // Render editor
+    function renderEditor() {
+        document.getElementById('startTime').value = scheduleData.startTime;
+        document.getElementById('setupMinutes').value = scheduleData.setupMinutes;
+        document.getElementById('showMinutes').value = scheduleData.showMinutes;
+
+        const bandsList = document.getElementById('bandsList');
+        bandsList.innerHTML = '';
+
+        scheduleData.bands.forEach((band, index) => {
+            const bandItem = createBandEditorItem(band, index);
+            bandsList.appendChild(bandItem);
         });
+    }
 
-        // Check if user is logged in
-        function checkLoginStatus() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-            if (isLoggedIn) {
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('editorPanel').classList.add('visible');
-                renderEditor();
-            }
-        }
+    // Create band editor item
+    function createBandEditorItem(bandName, index) {
+        const div = document.createElement('div');
+        div.className = 'band-item';
+        div.draggable = true;
+        div.dataset.index = index;
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Login form
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-
-            // Editor controls - no auto-save, just update display
-            document.getElementById('startTime').addEventListener('change', updateScheduleDisplay);
-            document.getElementById('setupMinutes').addEventListener('input', updateScheduleDisplay);
-            document.getElementById('showMinutes').addEventListener('input', updateScheduleDisplay);
-
-            // Editor actions
-            document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
-            document.getElementById('addBandBtn').addEventListener('click', addBand);
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-        }
-
-        // Login handler
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('loginError');
-
-            if (username === 'admin' && password === 'admin') {
-                errorDiv.classList.remove('visible');
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('editorPanel').classList.add('visible');
-                localStorage.setItem('isLoggedIn', 'true');
-                renderEditor();
-            } else {
-                errorDiv.textContent = 'Invalid credentials. Username: admin, Password: admin';
-                errorDiv.classList.add('visible');
-            }
-        }
-
-        // Logout handler
-        function logout() {
-            localStorage.setItem('isLoggedIn', 'false');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('editorPanel').classList.remove('visible');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
-
-        // Render editor
-        function renderEditor() {
-            document.getElementById('startTime').value = scheduleData.startTime;
-            document.getElementById('setupMinutes').value = scheduleData.setupMinutes;
-            document.getElementById('showMinutes').value = scheduleData.showMinutes;
-
-            const bandsList = document.getElementById('bandsList');
-            bandsList.innerHTML = '';
-
-            scheduleData.bands.forEach((band, index) => {
-                const bandItem = createBandEditorItem(band, index);
-                bandsList.appendChild(bandItem);
-            });
-        }
-
-        // Create band editor item
-        function createBandEditorItem(bandName, index) {
-            const div = document.createElement('div');
-            div.className = 'band-item';
-            div.draggable = true;
-            div.dataset.index = index;
-
-            div.innerHTML = `
+        div.innerHTML = `
                 <span class="band-number">${index + 1}</span>
                 <span class="drag-handle">☰</span>
                 <input type="text" value="${bandName}" class="band-name-input" data-index="${index}">
                 <button type="button" class="btn btn-danger" style="padding: 5px 15px; font-size: 0.9rem;" onclick="removeBand(${index})">Remove</button>
             `;
 
-            const input = div.querySelector('.band-name-input');
-            input.addEventListener('input', function () {
-                scheduleData.bands[index] = this.value;
-                updateScheduleDisplay();
-            });
+        const input = div.querySelector('.band-name-input');
+        input.addEventListener('input', function () {
+            scheduleData.bands[index] = this.value;
+            updateScheduleDisplay();
+        });
 
-            // Drag and drop
-            div.addEventListener('dragstart', handleDragStart);
-            div.addEventListener('dragover', handleDragOver);
-            div.addEventListener('drop', handleDrop);
-            div.addEventListener('dragend', handleDragEnd);
+        // Drag and drop
+        div.addEventListener('dragstart', handleDragStart);
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('drop', handleDrop);
+        div.addEventListener('dragend', handleDragEnd);
 
-            return div;
+        return div;
+    }
+
+    // Drag and drop handlers
+    let draggedElement = null;
+
+    function handleDragStart(e) {
+        draggedElement = this;
+        this.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault();
+        }
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation();
         }
 
-        // Drag and drop handlers
-        let draggedElement = null;
+        if (draggedElement !== this) {
+            const fromIndex = parseInt(draggedElement.dataset.index);
+            const toIndex = parseInt(this.dataset.index);
 
-        function handleDragStart(e) {
-            draggedElement = this;
-            this.style.opacity = '0.5';
-            e.dataTransfer.effectAllowed = 'move';
-        }
+            // Reorder bands array
+            const [movedBand] = scheduleData.bands.splice(fromIndex, 1);
+            scheduleData.bands.splice(toIndex, 0, movedBand);
 
-        function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-            e.dataTransfer.dropEffect = 'move';
-            return false;
-        }
-
-        function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-
-            if (draggedElement !== this) {
-                const fromIndex = parseInt(draggedElement.dataset.index);
-                const toIndex = parseInt(this.dataset.index);
-
-                // Reorder bands array
-                const [movedBand] = scheduleData.bands.splice(fromIndex, 1);
-                scheduleData.bands.splice(toIndex, 0, movedBand);
-
-                renderEditor();
-                updateScheduleDisplay();
-            }
-
-            return false;
-        }
-
-        function handleDragEnd(e) {
-            this.style.opacity = '1';
-        }
-
-        // Add band
-        function addBand() {
-            scheduleData.bands.push(`Band ${scheduleData.bands.length + 1}`);
             renderEditor();
             updateScheduleDisplay();
         }
 
-        // Remove band
-        function removeBand(index) {
-            if (scheduleData.bands.length > 1) {
-                scheduleData.bands.splice(index, 1);
-                renderEditor();
-                updateScheduleDisplay();
-            }
-        }
+        return false;
+    }
 
-        // Update schedule display (no save)
-        function updateScheduleDisplay() {
-            scheduleData.startTime = document.getElementById('startTime').value || scheduleData.startTime;
-            scheduleData.setupMinutes = parseInt(document.getElementById('setupMinutes').value) || scheduleData.setupMinutes;
-            scheduleData.showMinutes = parseInt(document.getElementById('showMinutes').value) || scheduleData.showMinutes;
+    function handleDragEnd(e) {
+        this.style.opacity = '1';
+    }
 
-            renderSchedule();
-        }
+    // Add band
+    function addBand() {
+        scheduleData.bands.push(`Band ${scheduleData.bands.length + 1}`);
+        renderEditor();
+        updateScheduleDisplay();
+    }
 
-        // Save changes to API
-        async function saveChanges() {
-            // Update data from inputs first
+    // Remove band
+    function removeBand(index) {
+        if (scheduleData.bands.length > 1) {
+            scheduleData.bands.splice(index, 1);
+            renderEditor();
             updateScheduleDisplay();
-
-            // Save to API
-            await saveToAPI();
-
-            // Show feedback
-            const btn = document.getElementById('saveChangesBtn');
-            const originalText = btn.textContent;
-            btn.textContent = 'Saved!';
-            btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '';
-            }, 2000);
         }
+    }
 
-        // Calculate time ranges
-        function calculateTimeRanges() {
-            const [startHour, startMinute] = scheduleData.startTime.split(':').map(Number);
-            let currentTime = new Date();
-            currentTime.setHours(startHour, startMinute, 0, 0);
+    // Update schedule display (no save)
+    function updateScheduleDisplay() {
+        scheduleData.startTime = document.getElementById('startTime').value || scheduleData.startTime;
+        scheduleData.setupMinutes = parseInt(document.getElementById('setupMinutes').value) || scheduleData.setupMinutes;
+        scheduleData.showMinutes = parseInt(document.getElementById('showMinutes').value) || scheduleData.showMinutes;
 
-            const ranges = [];
+        renderSchedule();
+    }
 
-            scheduleData.bands.forEach((band, index) => {
-                const setupStart = new Date(currentTime);
-                const setupEnd = new Date(currentTime.getTime() + scheduleData.setupMinutes * 60000);
-                const showStart = new Date(setupEnd);
-                const showEnd = new Date(showStart.getTime() + scheduleData.showMinutes * 60000);
+    // Save changes to API
+    async function saveChanges() {
+        // Update data from inputs first
+        updateScheduleDisplay();
 
-                ranges.push({
-                    bandNumber: index + 1,
-                    bandName: band,
-                    setupStart: formatTime(setupStart),
-                    setupEnd: formatTime(setupEnd),
-                    showStart: formatTime(showStart),
-                    showEnd: formatTime(showEnd),
-                    fullRange: `${formatTime(setupStart)} - ${formatTime(showEnd)}`
-                });
+        // Save to API
+        await saveToAPI();
 
-                currentTime = showEnd;
+        // Show feedback
+        const btn = document.getElementById('saveChangesBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Saved!';
+        btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 2000);
+    }
+
+    // Calculate time ranges
+    function calculateTimeRanges() {
+        const [startHour, startMinute] = scheduleData.startTime.split(':').map(Number);
+        let currentTime = new Date();
+        currentTime.setHours(startHour, startMinute, 0, 0);
+
+        const ranges = [];
+
+        scheduleData.bands.forEach((band, index) => {
+            const setupStart = new Date(currentTime);
+            const setupEnd = new Date(currentTime.getTime() + scheduleData.setupMinutes * 60000);
+            const showStart = new Date(setupEnd);
+            const showEnd = new Date(showStart.getTime() + scheduleData.showMinutes * 60000);
+
+            ranges.push({
+                bandNumber: index + 1,
+                bandName: band,
+                setupStart: formatTime(setupStart),
+                setupEnd: formatTime(setupEnd),
+                showStart: formatTime(showStart),
+                showEnd: formatTime(showEnd),
+                fullRange: `${formatTime(setupStart)} - ${formatTime(showEnd)}`
             });
 
-            return ranges;
-        }
+            currentTime = showEnd;
+        });
 
-        // Format time
-        function formatTime(date) {
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-        }
+        return ranges;
+    }
 
-        // Render schedule
-        function renderSchedule() {
-            const scheduleList = document.getElementById('scheduleList');
-            const ranges = calculateTimeRanges();
+    // Format time
+    function formatTime(date) {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
 
-            scheduleList.innerHTML = '';
+    // Render schedule
+    function renderSchedule() {
+        const scheduleList = document.getElementById('scheduleList');
+        const ranges = calculateTimeRanges();
 
-            ranges.forEach((range, index) => {
-                const item = document.createElement('div');
-                item.className = 'schedule-item';
-                item.style.animationDelay = `${index * 0.1}s`;
+        scheduleList.innerHTML = '';
 
-                item.innerHTML = `
+        ranges.forEach((range, index) => {
+            const item = document.createElement('div');
+            item.className = 'schedule-item';
+            item.style.animationDelay = `${index * 0.1}s`;
+
+            item.innerHTML = `
                     <div class="schedule-item-header">
                         <div class="band-info">
                             <span class="band-number-large">${range.bandNumber}</span>
@@ -821,92 +939,126 @@
                     </div>
                 `;
 
-                scheduleList.appendChild(item);
+            scheduleList.appendChild(item);
+        });
+    }
+
+
+    // Save to API (with localStorage fallback)
+    async function saveToAPI() {
+        try {
+            const response = await fetch('/api/schedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(scheduleData)
             });
-        }
 
-
-        // Save to API (with localStorage fallback)
-        async function saveToAPI() {
-            try {
-                const response = await fetch('/api/schedule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(scheduleData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    throw new Error(errorData.error || errorData.details || 'Failed to save schedule');
-                }
-
-                const result = await response.json();
-                console.log('✅ Schedule saved successfully:', result);
-
-                // Also save to localStorage as backup
-                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
-            } catch (error) {
-                console.error('❌ Error saving to API:', error.message);
-                // Show detailed error
-                if (error.message.includes('Edge Config') || error.message.includes('EDGE_CONFIG')) {
-                    console.error('⚠️ Edge Config not set up. Please configure EDGE_CONFIG and VERCEL_API_TOKEN environment variables in Vercel. See EDGE_CONFIG_SETUP_COMPLETE.md');
-                } else {
-                    console.error('⚠️ Error details:', error.message);
-                }
-                // Fallback to localStorage if API fails
-                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
-                console.warn('⚠️ Saved to local storage only - changes won\'t sync across devices.');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || errorData.details || 'Failed to save schedule');
             }
+
+            const result = await response.json();
+            console.log('✅ Schedule saved successfully:', result);
+
+            // Also save to localStorage as backup
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+        } catch (error) {
+            console.error('❌ Error saving to API:', error.message);
+            // Show detailed error
+            if (error.message.includes('Edge Config') || error.message.includes('EDGE_CONFIG')) {
+                console.error('⚠️ Edge Config not set up. Please configure EDGE_CONFIG and VERCEL_API_TOKEN environment variables in Vercel. See EDGE_CONFIG_SETUP_COMPLETE.md');
+            } else {
+                console.error('⚠️ Error details:', error.message);
+            }
+            // Fallback to localStorage if API fails
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            console.warn('⚠️ Saved to local storage only - changes won\'t sync across devices.');
         }
+    }
 
-        // Load from API (with localStorage fallback)
-        async function loadFromAPI() {
-            try {
-                const response = await fetch('/api/schedule');
+    // Load from API (with localStorage fallback)
+    async function loadFromAPI() {
+        try {
+            const response = await fetch('/api/schedule');
 
-                if (!response.ok) {
-                    throw new Error('Failed to load schedule');
+            if (!response.ok) {
+                throw new Error('Failed to load schedule');
+            }
+
+            const data = await response.json();
+            if (data && Object.keys(data).length > 0) {
+                // Check if Edge Config is not configured
+                if (data._warning) {
+                    console.warn('⚠️ Edge Config not configured - data is stored locally per device. See EDGE_CONFIG_SETUP_COMPLETE.md for instructions.');
+                    // Remove warning from data
+                    delete data._warning;
                 }
-
-                const data = await response.json();
-                if (data && Object.keys(data).length > 0) {
-                    // Check if Edge Config is not configured
-                    if (data._warning) {
-                        console.warn('⚠️ Edge Config not configured - data is stored locally per device. See EDGE_CONFIG_SETUP_COMPLETE.md for instructions.');
-                        // Remove warning from data
-                        delete data._warning;
-                    }
-                    scheduleData = data;
-                    // Also update localStorage as backup
-                    localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
-                } else {
-                    // If no data, try localStorage
-                    loadFromLocalStorage();
-                }
-            } catch (error) {
-                console.error('Error loading from API:', error);
-                // Fallback to localStorage if API fails
+                scheduleData = data;
+                // Also update localStorage as backup
+                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            } else {
+                // If no data, try localStorage
                 loadFromLocalStorage();
             }
+        } catch (error) {
+            console.error('Error loading from API:', error);
+            // Fallback to localStorage if API fails
+            loadFromLocalStorage();
         }
+    }
 
-        // Load from localStorage (fallback)
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('scheduleData');
-            if (saved) {
-                try {
-                    scheduleData = JSON.parse(saved);
-                } catch (e) {
-                    console.error('Error parsing localStorage data:', e);
-                }
+    // Load from localStorage (fallback)
+    function loadFromLocalStorage() {
+        const saved = localStorage.getItem('scheduleData');
+        if (saved) {
+            try {
+                scheduleData = JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing localStorage data:', e);
             }
         }
+    }
 
-        // Make removeBand available globally
-        window.removeBand = removeBand;
-    </script>
-    </body>
+    // Make removeBand available globally
+    window.removeBand = removeBand;
+
+    const loginBtn = document.getElementById('loginBtn');
+    const loginSection = document.getElementById('loginSection');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const container = document.querySelector('.container');
+
+    loginBtn.addEventListener('click', () => {
+        loginSection.classList.add('visible');
+        modalBackdrop.style.display = 'block';
+
+    });
+
+    // Cerrar clic fuera del modal
+    modalBackdrop.addEventListener('click', () => {
+        closeLoginModal();
+    });
+
+    function closeLoginModal() {
+        loginSection.classList.remove('visible');
+        modalBackdrop.style.display = 'none';
+        container.classList.remove('body-blurred');
+    }
+
+    // Cuando inicie sesión, cerrar modal automáticamente
+    const originalHandleLogin = handleLogin;
+    handleLogin = function (e) {
+        originalHandleLogin(e);
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            closeLoginModal();
+            loginBtn.style.display = "none";
+        }
+    };
+
+
+</script>
+</body>
 
 </html>
